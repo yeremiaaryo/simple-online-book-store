@@ -1,0 +1,9 @@
+service:
+  port: ":9999"
+  secretKey: "gotu-test"
+
+database:
+  master:
+    address: "postgres://admin:admin@localhost:5432/gotu?sslmode=disable"
+  slave:
+    address: "postgres://admin:admin@localhost:5432/gotu?sslmode=disable"
