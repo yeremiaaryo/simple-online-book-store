@@ -1,16 +1,18 @@
 package server
 
 import (
-	"log"
-
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/yeremiaaryo/gotu-assignment/internal/configs"
+	"github.com/yeremiaaryo/gotu-assignment/internal/handler/books"
 	"github.com/yeremiaaryo/gotu-assignment/internal/handler/users"
+	booksRepository "github.com/yeremiaaryo/gotu-assignment/internal/repository/books"
 	usersRepository "github.com/yeremiaaryo/gotu-assignment/internal/repository/users"
+	booksUsecase "github.com/yeremiaaryo/gotu-assignment/internal/usecase/books"
 	usersUsecase "github.com/yeremiaaryo/gotu-assignment/internal/usecase/users"
 	"github.com/yeremiaaryo/gotu-assignment/pkg/internalsql"
+	"log"
 )
 
 type CustomValidator struct {
@@ -36,12 +38,15 @@ func InitApps(cfg *configs.Config) error {
 
 	// Init all repo here
 	usersRepo := usersRepository.New(masterDB, slaveDB)
+	booksRepo := booksRepository.New(masterDB, slaveDB)
 
 	// Init all usecase here
 	usersUsecase := usersUsecase.New(usersRepo, cfg)
+	booksUsecase := booksUsecase.New(booksRepo, cfg)
 
 	// Init all handler here
 	usersHandler := users.New(usersUsecase)
+	booksHandler := books.New(booksUsecase)
 
 	// Echo instance
 	e := echo.New()
@@ -55,6 +60,9 @@ func InitApps(cfg *configs.Config) error {
 	// User handler
 	e.POST("/register", usersHandler.CreateUser)
 	e.POST("/login", usersHandler.Login)
+
+	// Book handler
+	e.GET("/books", booksHandler.GetBooks)
 
 	// Start server
 	e.Logger.Fatal(e.Start(cfg.Service.Port))
