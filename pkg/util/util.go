@@ -10,5 +10,5 @@ func GetUserID(c echo.Context) (int64, error) {
 	if userID == nil {
 		return 0, errors.New("userID not found")
 	}
-	return int64(userID.(float64)), nil
+	return userID.(int64), nil
 }
