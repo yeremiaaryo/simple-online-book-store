@@ -16,6 +16,7 @@ import (
 	ordersUsecase "github.com/yeremiaaryo/gotu-assignment/internal/usecase/orders"
 	usersUsecase "github.com/yeremiaaryo/gotu-assignment/internal/usecase/users"
 	"github.com/yeremiaaryo/gotu-assignment/pkg/internalsql"
+	"github.com/yeremiaaryo/gotu-assignment/pkg/redis"
 	"log"
 )
 
@@ -28,6 +29,11 @@ func (cv *CustomValidator) Validate(i interface{}) error {
 }
 
 func InitApps(cfg *configs.Config) error {
+	redisAgent, err := initRedis(&cfg.Redis)
+	if err != nil {
+		log.Fatalf("init redis failed: %v", err)
+	}
+
 	// Database initialization
 	masterDB, err := internalsql.OpenMasterDB("postgres", cfg.Database.Master.Address)
 	if err != nil {
@@ -46,7 +52,7 @@ func InitApps(cfg *configs.Config) error {
 	ordersRepo := ordersRepository.New(masterDB, slaveDB)
 
 	// Init all usecase here
-	usersUsecase := usersUsecase.New(usersRepo, cfg)
+	usersUsecase := usersUsecase.New(usersRepo, redisAgent, cfg)
 	booksUsecase := booksUsecase.New(booksRepo, cfg)
 	ordersUsecase := ordersUsecase.New(ordersRepo, booksRepo, cfg)
 
@@ -78,4 +84,29 @@ func InitApps(cfg *configs.Config) error {
 	// Start server
 	e.Logger.Fatal(e.Start(cfg.Service.Port))
 	return nil
+}
+
+func initRedis(config *configs.RedisConfig) (*redis.Redis, error) {
+	// init redis MS configs.
+	rdsConfig := redis.RedisConfig{
+		Address:  config.Address,
+		Password: config.Password,
+		Options: []redis.RedisOptions{
+			{
+				MaxActive: config.MaxActiveConnection,
+				MaxIdle:   config.MaxIdleConnection,
+				Timeout:   config.TimeOut,
+				Wait:      config.Wait,
+			},
+		},
+	}
+
+	// get MS redis agent.
+	redisAgent := redis.NewRedis(rdsConfig)
+	err := redisAgent.Ping()
+	if err != nil {
+		return nil, err
+	}
+
+	return redisAgent, nil
 }

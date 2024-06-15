@@ -3,12 +3,14 @@ package users
 import (
 	"context"
 	"errors"
-	"time"
-
+	"fmt"
 	"github.com/yeremiaaryo/gotu-assignment/internal/configs"
+	"github.com/yeremiaaryo/gotu-assignment/internal/constant"
 	"github.com/yeremiaaryo/gotu-assignment/internal/model/users"
 	"github.com/yeremiaaryo/gotu-assignment/pkg/jwt"
 	"golang.org/x/crypto/bcrypt"
+	"log"
+	"time"
 )
 
 //go:generate mockgen -package=users -source=users_usecase.go -destination=users_usecase_mock_test.go
@@ -17,13 +19,18 @@ type usersRepository interface {
 	InsertUser(ctx context.Context, model users.Model) (*users.Model, error)
 }
 
+type redis interface {
+	Set(key string, value string, ttl int64, field ...interface{}) (interface{}, error)
+}
+
 type usecase struct {
 	usersRepository usersRepository
+	redis           redis
 	cfg             *configs.Config
 }
 
-func New(usersRepository usersRepository, cfg *configs.Config) *usecase {
-	return &usecase{usersRepository: usersRepository, cfg: cfg}
+func New(usersRepository usersRepository, redis redis, cfg *configs.Config) *usecase {
+	return &usecase{usersRepository: usersRepository, redis: redis, cfg: cfg}
 }
 
 func (u *usecase) CreateUser(ctx context.Context, req users.CreateUserRequest) (*users.Model, error) {
@@ -65,5 +72,13 @@ func (u *usecase) Login(ctx context.Context, req users.LoginRequest) (string, er
 		return "", errors.New("invalid email or password")
 	}
 
-	return jwt.CreateToken(user.ID, user.Email, u.cfg.Service.SecretKey)
+	token, err := jwt.CreateToken(user.ID, user.Email, u.cfg.Service.SecretKey)
+	if err != nil {
+		return "", err
+	}
+	_, err = u.redis.Set(fmt.Sprintf(constant.TokenRedisKey, user.ID), token, int64((time.Hour * 24).Seconds()))
+	if err != nil {
+		log.Printf("[Login] error when set token to redis")
+	}
+	return token, nil
 }

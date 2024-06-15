@@ -5,6 +5,7 @@ import (
 	"errors"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/yeremiaaryo/gotu-assignment/internal/configs"
@@ -102,6 +103,7 @@ func Test_usecase_Login(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	mockUsersRepo := NewMockusersRepository(mockCtrl)
+	mockRedis := NewMockredis(mockCtrl)
 
 	type args struct {
 		ctx context.Context
@@ -150,7 +152,8 @@ func Test_usecase_Login(t *testing.T) {
 			},
 			wantErr: false,
 			mockFn: func(args args) {
-				mockUsersRepo.EXPECT().GetUser(gomock.Any(), args.req.Email).Return(&users.Model{Password: `$2a$10$Kes/ccWjDAw01VM1STV8mePua4YOpMwldDqlLq7GltRvJr/zdj7zq`}, nil)
+				mockUsersRepo.EXPECT().GetUser(gomock.Any(), args.req.Email).Return(&users.Model{ID: 123, Password: `$2a$10$Kes/ccWjDAw01VM1STV8mePua4YOpMwldDqlLq7GltRvJr/zdj7zq`}, nil)
+				mockRedis.EXPECT().Set("token:123", gomock.Any(), int64((24 * time.Hour).Seconds()))
 			},
 		},
 	}
@@ -159,6 +162,7 @@ func Test_usecase_Login(t *testing.T) {
 			tt.mockFn(tt.args)
 			u := &usecase{
 				usersRepository: mockUsersRepo,
+				redis:           mockRedis,
 				cfg: &configs.Config{
 					Service: configs.Service{
 						SecretKey: "secretkey",

@@ -64,3 +64,46 @@ func (mr *MockusersRepositoryMockRecorder) InsertUser(ctx, model interface{}) *g
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertUser", reflect.TypeOf((*MockusersRepository)(nil).InsertUser), ctx, model)
 }
+
+// Mockredis is a mock of redis interface.
+type Mockredis struct {
+	ctrl     *gomock.Controller
+	recorder *MockredisMockRecorder
+}
+
+// MockredisMockRecorder is the mock recorder for Mockredis.
+type MockredisMockRecorder struct {
+	mock *Mockredis
+}
+
+// NewMockredis creates a new mock instance.
+func NewMockredis(ctrl *gomock.Controller) *Mockredis {
+	mock := &Mockredis{ctrl: ctrl}
+	mock.recorder = &MockredisMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *Mockredis) EXPECT() *MockredisMockRecorder {
+	return m.recorder
+}
+
+// Set mocks base method.
+func (m *Mockredis) Set(key, value string, ttl int64, field ...interface{}) (interface{}, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{key, value, ttl}
+	for _, a := range field {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "Set", varargs...)
+	ret0, _ := ret[0].(interface{})
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Set indicates an expected call of Set.
+func (mr *MockredisMockRecorder) Set(key, value, ttl interface{}, field ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{key, value, ttl}, field...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Set", reflect.TypeOf((*Mockredis)(nil).Set), varargs...)
+}

@@ -4,6 +4,7 @@ type (
 	Config struct {
 		Service  Service
 		Database DatabaseConfig
+		Redis    RedisConfig
 	}
 
 	Service struct {
@@ -18,5 +19,15 @@ type (
 
 	PostgresConfig struct {
 		Address string
+	}
+
+	RedisConfig struct {
+		Address             string
+		Password            string
+		MaxActiveConnection int
+		MaxIdleConnection   int
+		TimeOut             int
+		Wait                bool
+		DB                  int
 	}
 )

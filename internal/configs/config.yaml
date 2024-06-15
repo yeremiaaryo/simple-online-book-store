@@ -7,3 +7,12 @@ database:
     address: "postgres://admin:admin@localhost:5432/gotu?sslmode=disable"
   slave:
     address: "postgres://admin:admin@localhost:5432/gotu?sslmode=disable"
+
+redis:
+  address: "localhost:6379"
+  password:
+  maxActiveConnection: 25
+  maxIdleConnection: 100
+  timeout: 1000
+  wait: true
+  db: 0
