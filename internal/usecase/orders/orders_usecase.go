@@ -7,11 +7,13 @@ import (
 	"github.com/yeremiaaryo/gotu-assignment/internal/configs"
 	"github.com/yeremiaaryo/gotu-assignment/internal/model/books"
 	"github.com/yeremiaaryo/gotu-assignment/internal/model/orders"
+	"github.com/yeremiaaryo/gotu-assignment/pkg/util"
 )
 
 //go:generate mockgen -package=orders -source=orders_usecase.go -destination=orders_usecase_mock_test.go
 type ordersRepository interface {
 	InsertOrder(ctx context.Context, order orders.CreateOrderRequest) (*orders.CreateOrderResponse, error)
+	GetOrdersByUserID(ctx context.Context, userID int64, limit, offset int) ([]orders.History, error)
 }
 
 type booksRepository interface {
@@ -55,4 +57,9 @@ func (u *usecase) InsertOrder(ctx context.Context, order orders.CreateOrderReque
 	}
 
 	return u.ordersRepository.InsertOrder(ctx, order)
+}
+
+func (u *usecase) GetOrdersByUserID(ctx context.Context, userID int64, pageIndex, pageSize int) ([]orders.History, error) {
+	limit, offset := util.GetLimitAndOffset(pageIndex, pageSize)
+	return u.ordersRepository.GetOrdersByUserID(ctx, userID, limit, offset)
 }

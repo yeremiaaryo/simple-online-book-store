@@ -73,6 +73,7 @@ func InitApps(cfg *configs.Config) error {
 
 	// Order handler
 	e.POST("/order", ordersHandler.CreateOrder, auth.AuthMiddleware)
+	e.GET("/order", ordersHandler.GetOrderHistory, auth.AuthMiddleware)
 
 	// Start server
 	e.Logger.Fatal(e.Start(cfg.Service.Port))

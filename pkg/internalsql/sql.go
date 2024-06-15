@@ -19,6 +19,7 @@ type DB interface {
 type Statement interface {
 	Close() error
 	QueryRowxContext(ctx context.Context, args ...interface{}) *sqlx.Row
+	QueryxContext(ctx context.Context, args ...interface{}) (*sqlx.Rows, error)
 }
 
 type MasterDB interface {

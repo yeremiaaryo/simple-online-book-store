@@ -23,14 +23,12 @@ func New(booksUsecase booksUsecase) *Handler {
 func (h *Handler) GetBooks(c echo.Context) error {
 	response := books.GetBookListResponse{}
 	search := c.QueryParam("search")
-	pageIndexStr := c.QueryParam("page_index")
-	pageSizeStr := c.QueryParam("page_size")
 
-	pageIndex, err := strconv.Atoi(pageIndexStr)
+	pageIndex, err := strconv.Atoi(c.QueryParam("page_index"))
 	if err != nil {
 		pageIndex = 1 // default page index is 1 if error
 	}
-	pageSize, err := strconv.Atoi(pageSizeStr)
+	pageSize, err := strconv.Atoi(c.QueryParam("page_size"))
 	if err != nil {
 		pageSize = 10 // default page size is 10 if error
 	}

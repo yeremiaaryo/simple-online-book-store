@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/yeremiaaryo/gotu-assignment/internal/configs"
 	"github.com/yeremiaaryo/gotu-assignment/internal/model/books"
+	"github.com/yeremiaaryo/gotu-assignment/pkg/util"
 )
 
 //go:generate mockgen -package=books -source=books_usecase.go -destination=books_usecase_mock_test.go
@@ -21,16 +22,7 @@ func New(booksRepository booksRepository, cfg *configs.Config) *usecase {
 }
 
 func (u *usecase) GetBooks(ctx context.Context, search string, pageSize, pageIndex int) ([]books.Model, error) {
-	// sanitize request
-	if pageIndex <= 0 {
-		pageIndex = 1
-	}
-	if pageSize <= 0 {
-		pageSize = 10
-	}
-
 	// convert to limit and offset
-	limit := pageSize
-	offset := (pageIndex - 1) * limit
+	limit, offset := util.GetLimitAndOffset(pageIndex, pageSize)
 	return u.booksRepository.GetBooks(ctx, search, limit, offset)
 }

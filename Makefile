@@ -4,6 +4,9 @@ export POSTGRESQL_URL='postgres://admin:admin@localhost:5432/gotu?sslmode=disabl
 run:
 	@ go run cmd/main/main.go
 
+test:
+	@ go test ./... -race -cover -v
+
 migrate-create:
 	@ migrate create -ext sql -dir scripts/migrations -seq $(name)
 

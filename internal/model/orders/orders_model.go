@@ -31,6 +31,22 @@ type (
 		CreatedAt int64   `db:"created_at"`
 		UpdatedAt int64   `db:"updated_at"`
 	}
+
+	History struct {
+		ID          int64         `json:"order_id"`
+		TotalAmount float64       `json:"total_amount"`
+		Status      string        `json:"status"`
+		CreatedAt   int64         `json:"created_at"`
+		UpdatedAt   int64         `json:"updated_at"`
+		Items       []ItemHistory `json:"items"`
+	}
+
+	ItemHistory struct {
+		ID       int64   `json:"item_id"`
+		BookID   int64   `json:"book_id"`
+		Quantity int     `json:"quantity"`
+		Price    float64 `json:"price"`
+	}
 )
 
 type (
@@ -52,5 +68,10 @@ type (
 		response.BaseResponse
 		OrderID int64  `json:"order_id"`
 		Status  string `json:"status"`
+	}
+
+	OrderHistoryResponse struct {
+		response.BaseResponse
+		Histories []History `json:"data"`
 	}
 )

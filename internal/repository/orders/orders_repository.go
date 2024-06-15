@@ -2,6 +2,7 @@ package orders
 
 import (
 	"context"
+	"github.com/lib/pq"
 	"github.com/yeremiaaryo/gotu-assignment/internal/model/orders"
 	"github.com/yeremiaaryo/gotu-assignment/pkg/internalsql"
 	"time"
@@ -62,4 +63,73 @@ func (r *repository) InsertOrder(ctx context.Context, order orders.CreateOrderRe
 	}
 
 	return response, tx.Commit()
+}
+
+func (r *repository) GetOrdersByUserID(ctx context.Context, userID int64, limit, offset int) ([]orders.History, error) {
+	rebindQuery := r.slaveDB.Rebind(getOrderHistoryByUserID)
+	stmt, err := r.slaveDB.PreparexContext(ctx, rebindQuery)
+	if err != nil {
+		return nil, err
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.QueryxContext(ctx, userID, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var ordersList []orders.History
+	for rows.Next() {
+		var order orders.History
+		err = rows.Scan(&order.ID, &order.TotalAmount, &order.Status, &order.CreatedAt, &order.UpdatedAt)
+		if err != nil {
+			return nil, err
+		}
+		ordersList = append(ordersList, order)
+	}
+
+	if len(ordersList) == 0 {
+		return nil, nil
+	}
+
+	orderIDs := make([]int64, len(ordersList))
+	for i, order := range ordersList {
+		orderIDs[i] = order.ID
+	}
+
+	rebindItemQuery := r.slaveDB.Rebind(getItemsQuery)
+	stmtItem, err := r.slaveDB.PreparexContext(ctx, rebindItemQuery)
+	if err != nil {
+		return nil, err
+	}
+	defer stmtItem.Close()
+
+	itemsRows, err := stmtItem.QueryxContext(ctx, pq.Array(orderIDs))
+	if err != nil {
+		return nil, err
+	}
+	defer itemsRows.Close()
+
+	// Map items to their respective orders
+	itemsMap := make(map[int64][]orders.ItemHistory)
+	for itemsRows.Next() {
+		var (
+			item    orders.ItemHistory
+			orderID int64
+		)
+
+		err = itemsRows.Scan(&item.ID, &orderID, &item.BookID, &item.Quantity, &item.Price)
+		if err != nil {
+			return nil, err
+		}
+		itemsMap[orderID] = append(itemsMap[orderID], item)
+	}
+
+	// Attach items to their orders
+	for i, order := range ordersList {
+		ordersList[i].Items = itemsMap[order.ID]
+	}
+
+	return ordersList, nil
 }

@@ -35,6 +35,21 @@ func (m *MockordersUsecase) EXPECT() *MockordersUsecaseMockRecorder {
 	return m.recorder
 }
 
+// GetOrdersByUserID mocks base method.
+func (m *MockordersUsecase) GetOrdersByUserID(ctx context.Context, userID int64, pageIndex, pageSize int) ([]orders.History, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOrdersByUserID", ctx, userID, pageIndex, pageSize)
+	ret0, _ := ret[0].([]orders.History)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetOrdersByUserID indicates an expected call of GetOrdersByUserID.
+func (mr *MockordersUsecaseMockRecorder) GetOrdersByUserID(ctx, userID, pageIndex, pageSize interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrdersByUserID", reflect.TypeOf((*MockordersUsecase)(nil).GetOrdersByUserID), ctx, userID, pageIndex, pageSize)
+}
+
 // InsertOrder mocks base method.
 func (m *MockordersUsecase) InsertOrder(ctx context.Context, order orders.CreateOrderRequest) (*orders.CreateOrderResponse, error) {
 	m.ctrl.T.Helper()
