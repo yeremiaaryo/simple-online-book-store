@@ -5,6 +5,7 @@
 2. install golang migrate: https://github.com/golang-migrate/migrate
 3. make migrate-up # this will initiate all the tables needed, as well as the books table that is preloaded with 10 data
 4. make run # this will run user service in port 9999
+5. Postman collection is included for testing purposes (`Gotu.postman_collection.json`), you can import to your postman apps
 
 ## APIs
 ### Users Service

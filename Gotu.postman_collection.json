@@ -1,0 +1,181 @@
+{
+	"info": {
+		"_postman_id": "93a222e4-4dec-4fe3-b0d6-4908670e729f",
+		"name": "Gotu",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "21337679",
+		"_collection_link": "https://bold-shadow-198415.postman.co/workspace/My-Workspace~c1995656-b087-4b3c-8ea9-568986a6e138/collection/21337679-93a222e4-4dec-4fe3-b0d6-4908670e729f?action=share&source=collection_link&creator=21337679"
+	},
+	"item": [
+		{
+			"name": "Register",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"email\": \"email@gmail.com\",\r\n    \"password\": \"password\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:9999/register",
+					"host": [
+						"localhost"
+					],
+					"port": "9999",
+					"path": [
+						"register"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Login",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"email\": \"email@gmail.com\",\r\n    \"password\": \"password\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:9999/login",
+					"host": [
+						"localhost"
+					],
+					"port": "9999",
+					"path": [
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Book List",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:9999/books?page_size=2",
+					"host": [
+						"localhost"
+					],
+					"port": "9999",
+					"path": [
+						"books"
+					],
+					"query": [
+						{
+							"key": "page_size",
+							"value": "2"
+						},
+						{
+							"key": "search",
+							"value": "",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Order",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtYWlsQGdtYWlsLmNvbSIsImV4cCI6MTcxODQ3Mzc4NCwiaWQiOjF9.DLgqms3jEAqucYqv-p9F3Tmk3LXwOv4LcqshYbr_rk8",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"total_amount\": 35.96,\r\n    \"items\": [\r\n        {\r\n            \"book_id\": 10,\r\n            \"quantity\": 2,\r\n            \"price\": 9.99\r\n        },\r\n        {\r\n            \"book_id\": 2,\r\n            \"quantity\": 2,\r\n            \"price\": 7.99\r\n        }\r\n    ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:9999/order",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9999",
+					"path": [
+						"order"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Order History",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtYWlsQGdtYWlsLmNvbSIsImV4cCI6MTcxODQ3Mzc4NCwiaWQiOjF9.DLgqms3jEAqucYqv-p9F3Tmk3LXwOv4LcqshYbr_rk8",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:9999/order",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9999",
+					"path": [
+						"order"
+					],
+					"query": [
+						{
+							"key": "page_size",
+							"value": "1",
+							"disabled": true
+						},
+						{
+							"key": "page_index",
+							"value": "2",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
