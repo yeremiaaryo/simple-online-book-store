@@ -61,6 +61,9 @@ func InitApps(cfg *configs.Config) error {
 	booksHandler := books.New(booksUsecase)
 	ordersHandler := orders.New(ordersUsecase)
 
+	// init auth
+	authHandler := auth.New(redisAgent)
+
 	// Echo instance
 	e := echo.New()
 	e.Validator = &CustomValidator{validator: validator.New()}
@@ -78,8 +81,8 @@ func InitApps(cfg *configs.Config) error {
 	e.GET("/books", booksHandler.GetBooks)
 
 	// Order handler
-	e.POST("/order", ordersHandler.CreateOrder, auth.AuthMiddleware)
-	e.GET("/order", ordersHandler.GetOrderHistory, auth.AuthMiddleware)
+	e.POST("/order", ordersHandler.CreateOrder, authHandler.AuthMiddleware)
+	e.GET("/order", ordersHandler.GetOrderHistory, authHandler.AuthMiddleware)
 
 	// Start server
 	e.Logger.Fatal(e.Start(cfg.Service.Port))
