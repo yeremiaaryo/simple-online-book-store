@@ -137,14 +137,13 @@ Content-Type: application/json
 API to get order history by user, need Bearer token got from the login API to be included in header
 
 ```
-URL: POST /order
+URL: GET /order
 Content-Type: application/json
 ```
 ```
 Parameters:
 page_index = int // default will be 1
 page_size = int // default will be 10
-search = string // can be used to search by title or by author
 ```
 ##### Response:
 ```json
