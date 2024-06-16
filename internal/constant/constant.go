@@ -1,5 +1,6 @@
 package constant
 
 const (
-	TokenRedisKey = "token:%d"
+	RedisKeyToken = "token:%d"
+	RedisKeyBooks = "books:%s:%d:%d"
 )

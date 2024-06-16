@@ -76,7 +76,7 @@ func (u *usecase) Login(ctx context.Context, req users.LoginRequest) (string, er
 	if err != nil {
 		return "", err
 	}
-	_, err = u.redis.Set(fmt.Sprintf(constant.TokenRedisKey, user.ID), token, int64((time.Hour * 24).Seconds()))
+	_, err = u.redis.Set(fmt.Sprintf(constant.RedisKeyToken, user.ID), token, int64((time.Hour * 24).Seconds()))
 	if err != nil {
 		log.Printf("[Login] error when set token to redis")
 	}

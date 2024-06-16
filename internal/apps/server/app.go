@@ -48,7 +48,7 @@ func InitApps(cfg *configs.Config) error {
 
 	// Init all repo here
 	usersRepo := usersRepository.New(masterDB, slaveDB)
-	booksRepo := booksRepository.New(masterDB, slaveDB)
+	booksRepo := booksRepository.New(masterDB, slaveDB, redisAgent)
 	ordersRepo := ordersRepository.New(masterDB, slaveDB)
 
 	// Init all usecase here

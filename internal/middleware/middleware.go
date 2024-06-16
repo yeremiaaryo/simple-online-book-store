@@ -49,7 +49,7 @@ func (h *Handler) AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 				Error:  "invalid token",
 			})
 		}
-		latestToken, err := h.redis.Get(fmt.Sprintf(constant.TokenRedisKey, userID))
+		latestToken, err := h.redis.Get(fmt.Sprintf(constant.RedisKeyToken, userID))
 		if err != nil {
 			return c.JSON(http.StatusForbidden, response.BaseResponse{
 				Result: false,

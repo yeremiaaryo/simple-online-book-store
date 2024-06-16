@@ -23,6 +23,8 @@ func Test_repository_GetBooks(t *testing.T) {
 		_ = db.Close()
 	}()
 
+	mockRedis := NewMockredis(mockCtrl)
+
 	type args struct {
 		ctx    context.Context
 		search string
@@ -47,7 +49,8 @@ func Test_repository_GetBooks(t *testing.T) {
 			want:    nil,
 			wantErr: true,
 			mockFn: func(args args) {
-				mock.ExpectPrepare(`SELECT id, title, author, isbn, published_date,  price, created_at, updated_at FROM books WHERE lower(title) ILIKE lower(?) OR lower(author) ILIKE lower(?) LIMIT ? OFFSET ?`).
+				mockRedis.EXPECT().Get("books:Orwell:10:0").Return("", errors.New("failed"))
+				mock.ExpectPrepare(`SELECT id, title, author, isbn, published_date, price FROM books WHERE lower(title) ILIKE lower(?) OR lower(author) ILIKE lower(?) LIMIT ? OFFSET ?`).
 					WillReturnError(errors.New("failed"))
 			},
 		},
@@ -62,7 +65,8 @@ func Test_repository_GetBooks(t *testing.T) {
 			want:    nil,
 			wantErr: true,
 			mockFn: func(args args) {
-				mock.ExpectPrepare(`SELECT id, title, author, isbn, published_date, price, created_at, updated_at FROM books WHERE lower(title) ILIKE lower(?) OR lower(author) ILIKE lower(?) LIMIT ? OFFSET ?`).
+				mockRedis.EXPECT().Get("books:Orwell:10:0").Return("", errors.New("failed"))
+				mock.ExpectPrepare(`SELECT id, title, author, isbn, published_date, price FROM books WHERE lower(title) ILIKE lower(?) OR lower(author) ILIKE lower(?) LIMIT ? OFFSET ?`).
 					ExpectQuery().
 					WithArgs("%Orwell%", "%Orwell%", 10, 0).
 					WillReturnError(errors.New("failed"))
@@ -78,22 +82,22 @@ func Test_repository_GetBooks(t *testing.T) {
 			},
 			want: []books.Model{
 				{
-					ID:        1,
-					Title:     "1984",
-					Author:    "George Orwell",
-					ISBN:      "9780451524935",
-					Price:     9.99,
-					CreatedAt: 1623550814,
-					UpdatedAt: 1623550814,
+					ID:     1,
+					Title:  "1984",
+					Author: "George Orwell",
+					ISBN:   "9780451524935",
+					Price:  9.99,
 				},
 			},
 			wantErr: false,
 			mockFn: func(args args) {
-				mock.ExpectPrepare(`SELECT id, title, author, isbn, published_date, price, created_at, updated_at FROM books WHERE lower(title) ILIKE lower(?) OR lower(author) ILIKE lower(?) LIMIT ? OFFSET ?`).
+				mockRedis.EXPECT().Get("books:Orwell:10:0").Return("", errors.New("failed"))
+				mock.ExpectPrepare(`SELECT id, title, author, isbn, published_date, price FROM books WHERE lower(title) ILIKE lower(?) OR lower(author) ILIKE lower(?) LIMIT ? OFFSET ?`).
 					ExpectQuery().
 					WithArgs("%Orwell%", "%Orwell%", 10, 0).
-					WillReturnRows(sqlmock.NewRows([]string{"id", "title", "author", "isbn", "price", "created_at", "updated_at"}).
-						AddRow(1, "1984", "George Orwell", "9780451524935", 9.99, 1623550814, 1623550814))
+					WillReturnRows(sqlmock.NewRows([]string{"id", "title", "author", "isbn", "price"}).
+						AddRow(1, "1984", "George Orwell", "9780451524935", 9.99))
+				mockRedis.EXPECT().Set("books:Orwell:10:0", gomock.Any(), gomock.Any()).Return(nil, nil)
 			},
 		},
 		{
@@ -106,41 +110,70 @@ func Test_repository_GetBooks(t *testing.T) {
 			},
 			want: []books.Model{
 				{
-					ID:        1,
-					Title:     "1984",
-					Author:    "George Orwell",
-					ISBN:      "9780451524935",
-					Price:     9.99,
-					CreatedAt: 1623550814,
-					UpdatedAt: 1623550814,
+					ID:     1,
+					Title:  "1984",
+					Author: "George Orwell",
+					ISBN:   "9780451524935",
+					Price:  9.99,
 				},
 				{
-					ID:        2,
-					Title:     "Animal Farm",
-					Author:    "George Orwell",
-					ISBN:      "9780451526342",
-					Price:     8.99,
-					CreatedAt: 1623550814,
-					UpdatedAt: 1623550814,
+					ID:     2,
+					Title:  "Animal Farm",
+					Author: "George Orwell",
+					ISBN:   "9780451526342",
+					Price:  8.99,
 				},
 			},
 			wantErr: false,
 			mockFn: func(args args) {
-				mock.ExpectPrepare(`SELECT id, title, author, isbn, published_date, price, created_at, updated_at FROM books LIMIT ? OFFSET ?`).
+				mockRedis.EXPECT().Get("books::10:0").Return("", errors.New("failed"))
+				mock.ExpectPrepare(`SELECT id, title, author, isbn, published_date, price FROM books LIMIT ? OFFSET ?`).
 					ExpectQuery().
 					WithArgs(10, 0).
-					WillReturnRows(sqlmock.NewRows([]string{"id", "title", "author", "isbn", "price", "created_at", "updated_at"}).
-						AddRow(1, "1984", "George Orwell", "9780451524935", 9.99, 1623550814, 1623550814).
-						AddRow(2, "Animal Farm", "George Orwell", "9780451526342", 8.99, 1623550814, 1623550814))
+					WillReturnRows(sqlmock.NewRows([]string{"id", "title", "author", "isbn", "price"}).
+						AddRow(1, "1984", "George Orwell", "9780451524935", 9.99).
+						AddRow(2, "Animal Farm", "George Orwell", "9780451526342", 8.99))
+				mockRedis.EXPECT().Set("books::10:0", gomock.Any(), gomock.Any()).Return(nil, nil)
+			},
+		},
+		{
+			name: "no search term, get from redis",
+			args: args{
+				ctx:    context.Background(),
+				search: "",
+				limit:  10,
+				offset: 0,
+			},
+			want: []books.Model{
+				{
+					ID:     1,
+					Title:  "1984",
+					Author: "George Orwell",
+					ISBN:   "9780451524935",
+					Price:  9.99,
+				},
+				{
+					ID:     2,
+					Title:  "Animal Farm",
+					Author: "George Orwell",
+					ISBN:   "9780451526342",
+					Price:  8.99,
+				},
+			},
+			wantErr: false,
+			mockFn: func(args args) {
+				mockRedis.EXPECT().Get("books::10:0").Return(`[{"id":1,"title":"1984","author":"George Orwell","isbn":"9780451524935","published_date":"0001-01-01T00:00:00Z","price":9.99},{"id":2,"title":"Animal Farm","author":"George Orwell","isbn":"9780451526342","published_date":"0001-01-01T00:00:00Z","price":8.99}]`, nil)
 			},
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mockFn(tt.args)
 			r := &repository{
 				masterDB: masterDB,
 				slaveDB:  slaveDB,
+				redis:    mockRedis,
 			}
 			got, err := r.GetBooks(tt.args.ctx, tt.args.search, tt.args.limit, tt.args.offset)
 			if (err != nil) != tt.wantErr {
@@ -169,7 +202,7 @@ func Test_repository_GetBookByIDs(t *testing.T) {
 		ctx context.Context
 		ids []int64
 	}
-	selectQuery := masterDB.Rebind(`SELECT id, title, author, isbn, published_date, price, created_at, updated_at FROM books WHERE id = ANY(?)`)
+	selectQuery := masterDB.Rebind(`SELECT id, title, author, isbn, published_date, price FROM books WHERE id = ANY(?)`)
 	tests := []struct {
 		name    string
 		args    args
@@ -213,22 +246,18 @@ func Test_repository_GetBookByIDs(t *testing.T) {
 			},
 			want: map[int64]books.Model{
 				1: {
-					ID:        1,
-					Title:     "1984",
-					Author:    "George Orwell",
-					ISBN:      "9780451524935",
-					Price:     9.99,
-					CreatedAt: 1623550814,
-					UpdatedAt: 1623550814,
+					ID:     1,
+					Title:  "1984",
+					Author: "George Orwell",
+					ISBN:   "9780451524935",
+					Price:  9.99,
 				},
 				2: {
-					ID:        2,
-					Title:     "Animal Farm",
-					Author:    "George Orwell",
-					ISBN:      "9780451526342",
-					Price:     8.99,
-					CreatedAt: 1623550814,
-					UpdatedAt: 1623550814,
+					ID:     2,
+					Title:  "Animal Farm",
+					Author: "George Orwell",
+					ISBN:   "9780451526342",
+					Price:  8.99,
 				},
 			},
 			wantErr: false,
@@ -236,9 +265,9 @@ func Test_repository_GetBookByIDs(t *testing.T) {
 				mock.ExpectPrepare(selectQuery).
 					ExpectQuery().
 					WithArgs(pq.Array(args.ids)).
-					WillReturnRows(sqlmock.NewRows([]string{"id", "title", "author", "isbn", "price", "created_at", "updated_at"}).
-						AddRow(1, "1984", "George Orwell", "9780451524935", 9.99, 1623550814, 1623550814).
-						AddRow(2, "Animal Farm", "George Orwell", "9780451526342", 8.99, 1623550814, 1623550814))
+					WillReturnRows(sqlmock.NewRows([]string{"id", "title", "author", "isbn", "price"}).
+						AddRow(1, "1984", "George Orwell", "9780451524935", 9.99).
+						AddRow(2, "Animal Farm", "George Orwell", "9780451526342", 8.99))
 			},
 		},
 	}

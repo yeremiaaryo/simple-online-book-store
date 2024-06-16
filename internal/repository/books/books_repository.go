@@ -2,27 +2,50 @@ package books
 
 import (
 	"context"
+	"fmt"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/lib/pq"
+	"github.com/yeremiaaryo/gotu-assignment/internal/constant"
 	"github.com/yeremiaaryo/gotu-assignment/internal/model/books"
 	"github.com/yeremiaaryo/gotu-assignment/pkg/internalsql"
 	"strings"
+	"time"
 )
+
+//go:generate mockgen -package=books -source=books_repository.go -destination=books_repository_mock_test.go
+type redis interface {
+	Get(key string, field ...interface{}) (string, error)
+	Set(key string, value string, ttl int64, field ...interface{}) (interface{}, error)
+}
 
 type repository struct {
 	masterDB internalsql.MasterDB
 	slaveDB  internalsql.SlaveDB
+	redis    redis
 }
 
-func New(masterDB internalsql.MasterDB, slaveDB internalsql.SlaveDB) *repository {
+func New(masterDB internalsql.MasterDB, slaveDB internalsql.SlaveDB, redis redis) *repository {
 	r := repository{
 		masterDB: masterDB,
 		slaveDB:  slaveDB,
+		redis:    redis,
 	}
 
 	return &r
 }
 
 func (r *repository) GetBooks(ctx context.Context, search string, limit, offset int) ([]books.Model, error) {
+	var bookList []books.Model
+
+	redisKey := fmt.Sprintf(constant.RedisKeyBooks, search, limit, offset)
+	resStr, err := r.redis.Get(redisKey)
+	if err == nil && resStr != "" {
+		err = jsoniter.Unmarshal([]byte(resStr), &bookList)
+		if err == nil {
+			return bookList, nil
+		}
+	}
+
 	var queryBuilder strings.Builder
 	queryBuilder.WriteString(queryGetBooks)
 
@@ -46,11 +69,17 @@ func (r *repository) GetBooks(ctx context.Context, search string, limit, offset 
 	}
 	defer stmt.Close()
 
-	var bookList []books.Model
 	err = stmt.SelectContext(ctx, &bookList, args...)
 	if err != nil {
 		return nil, err
 	}
+
+	val, err := jsoniter.MarshalToString(bookList)
+	if err != nil {
+		return bookList, nil // still return no error, just error on set redis shouldn't block user journey
+	}
+	fmt.Println(val)
+	_, _ = r.redis.Set(redisKey, val, int64((30 * time.Second).Seconds()))
 	return bookList, nil
 }
 
